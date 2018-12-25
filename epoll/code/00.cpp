@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 using namespace std;
 
 #define MAXLINE     5
@@ -22,14 +24,14 @@ void setnonblocking(int sock){
     if(opts<0)
     {
         perror("fcntl(sock,GETFL)");
-        exit(1);
+        _exit(1);
 
     }
     opts = opts|O_NONBLOCK;
     if(fcntl(sock,F_SETFL,opts)<0)
     {
         perror("fcntl(sock,SETFL,opts)");
-        exit(1);
+        _exit(1);
 
     }
 }
@@ -53,12 +55,17 @@ int main(int argc, char* argv[])
         fprintf(stderr,"Usage:%s portnumber/a/n",argv[0]);
         return 1;
     }
-    struct epoll_event ev,events[20]; //声明epoll_event结构体的变量,ev用于注册事件,数组用于回传要处理的事件
-    epfd=epoll_create(256); //生成用于处理accept的epoll专用的文件描述符
+
+    //声明epoll_event结构体的变量,ev用于注册事件,数组用于回传要处理的事件
+    struct epoll_event ev,events[20];
+    //生成用于处理accept的epoll专用的文件描述符
+    epfd=epoll_create(256); 
+
     struct sockaddr_in clientaddr;
     struct sockaddr_in serveraddr;
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    setnonblocking(listenfd); //把socket设置为非阻塞方式
+    //把socket设置为非阻塞方式
+    setnonblocking(listenfd);     
     ev.data.fd=listenfd; //设置与要处理的事件相关的文件描述符
     ev.events=EPOLLIN|EPOLLET;  //设置要处理的事件类型    
 
@@ -80,7 +87,7 @@ int main(int argc, char* argv[])
                 connfd = accept(listenfd,(sockaddr *)&clientaddr, &clilen);
                 if(connfd<0){
                     perror("connfd<0");
-                    exit(1);
+                    _exit(1);
                 }
                 char *str = inet_ntoa(clientaddr.sin_addr);
                 cout << "accapt a connection from " << str << endl;
